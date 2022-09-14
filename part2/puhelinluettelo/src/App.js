@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios';
+import peopleService from './services/people'
 
 const AddPerson = ({persons, onSuccess}) => {
   const [newEntry, setNewEntry] = useState({name: '', number: ''})
@@ -16,7 +16,12 @@ const AddPerson = ({persons, onSuccess}) => {
       alert(`${newEntry.name} is already added to phonebook`); return;
     }
 
-    onSuccess(persons.concat(newEntry));
+    peopleService
+      .create(newEntry)
+      .then(newPerson => {
+        onSuccess(persons.concat(newPerson))
+      })
+
     setNewEntry(initialEntryValues)
   }
 
@@ -49,16 +54,16 @@ const NameFilter = ({filterValue, onFilterChange}) => {
     </div>)
 }
 
-const People = ({persons}) => {
+const People = ({persons, onRemove}) => {
   return (
     <>
-      {persons.map(person => <Person person={person} key={person.name}/>)}    
+      {persons.map(person => <Person person={person} key={person.name} onRemove={onRemove}/>)}    
     </>
   )
 }
 
-const Person = ({person}) => {
-  return (<p>{person.name} {person.number}</p>)
+const Person = ({person, onRemove}) => {
+  return (<><p>{person.name} {person.number}</p><button onClick={() => onRemove(person.id)}>test</button></>)
 }
 
 const App = () => {
@@ -66,10 +71,20 @@ const App = () => {
   const [persons, setPersons] = useState([])
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => setPersons(response.data))
+    peopleService
+      .getAll()
+      .then(initialPeople => {
+        setPersons(initialPeople)
+      })
   }, [])
+
+  const onPersonRemove = (id) => {
+    peopleService
+      .remove(id)
+      .then(removed => {
+        setPersons(persons.filter(p => p.id !== id))
+      })
+  }
 
   return (
     <div>
@@ -78,7 +93,7 @@ const App = () => {
       <h2>Add a new</h2>
       <AddPerson persons={persons} onSuccess={setPersons}/>
       <h2>Number</h2>
-      <People persons={persons.filter(v => v.name.toLocaleLowerCase().startsWith(filterState))}/>
+      <People persons={persons.filter(v => v.name.toLocaleLowerCase().startsWith(filterState))} onRemove={onPersonRemove}/>
     </div>
   )
 
