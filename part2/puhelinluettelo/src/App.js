@@ -63,7 +63,13 @@ const People = ({persons, onRemove}) => {
 }
 
 const Person = ({person, onRemove}) => {
-  return (<><p>{person.name} {person.number}</p><button onClick={() => onRemove(person.id)}>test</button></>)
+  const remove = () => {
+    if (window.confirm(`Do you really want to delete ${person.name}?`)) {
+      onRemove(person.id)
+    }
+  }
+
+  return (<><p>{person.name} {person.number}</p><button onClick={() => remove()}>Delete</button></>)
 }
 
 const App = () => {
